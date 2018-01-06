@@ -1,11 +1,14 @@
 const express = require('express');
 const employeesRouter = express.Router({mergeParams: true});
+const timesheetsRouter = require('./timesheets.js');
 
 const bodyParser = require('body-parser');
 employeesRouter.use(bodyParser.json());
 
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
+
+employeesRouter.use('/:id/timesheets', timesheetsRouter);
 
 employeesRouter.get('/', (req, res) => {
     db.all('select * from Employee where is_current_employee = 1', (err, rows) => {

@@ -12,17 +12,24 @@ db.serialize(() => {
     position TEXT NOT NULL,
     wage INTEGER NOT NULL,
     is_current_employee INTEGER DEFAULT 1);`);
-    db.run(`CREATE TABLE Series (
+    db.run(`CREATE TABLE Timesheet (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    description TEXT,
+    hours INTEGER NOT NULL,
+    rate INTEGER NOT NULL,
+    date INTEGER NOT NULL,
+    employee_id INTEGER NOT NULL,
+    FOREIGN KEY (employee_id) REFERENCES Employee(id));`);
+    db.run(`CREATE TABLE Menu (
+    id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL);`);
+    db.run(`CREATE TABLE MenuItem (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    description TEXT NOT NULL);`);
-    db.run(`CREATE TABLE Issue (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    issue_number TEXT NOT NULL,
-    publication_date TEXT NOT NULL,
-    artist_id INTEGER NOT NULL,
-    series_id INTEGER NOT NULL,
-    FOREIGN KEY(artist_id) REFERENCES Artist(id),
-    FOREIGN KEY (series_id) REFERENCES Series(id));`);
+    description TEXT,
+    inventory INTEGER NOT NULL,
+    price INTEGER NOT NULL,
+    menu_id INTEGER NOT NULL,
+    FOREIGN KEY (menu_id) REFERENCES Menu(id));`);
 });

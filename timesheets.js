@@ -90,19 +90,18 @@ timesheetsRouter.put('/:id', validateTimesheet, (req, res, next) => {
     });
 
 timesheetsRouter.delete('/:id', (req, res, next) => {
-
-    db.run(`DELETE FROM Timesheet WHERE id = ${req.params.id}`), function (error, row) {
-        console.log(row);
+  const menuSql = 'SELECT * FROM MenuItem WHERE MenuItem.menu_id = $menuid';
+  const menuValues = {$menuid: req.params.id};
+      db.run('DELETE from Menu where id = $id', {$id: req.params.id}, (error) => {
         if (error) {
-            console.log('this is error ' + error);
-            next(error);
-
+          next(error);
         } else {
           res.sendStatus(204);
         }
-
+      });
     }
-    });
+  );
+
 
 
 

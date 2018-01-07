@@ -5,16 +5,17 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
 
-// timesheetsRouter.param('id', (req, res, next, id) => {
-//   console.log('doing name validations on ' + id);
-//   db.get('Select * from Employee where id = $id', {$id: id}, (error, timesheet) => {
-//     if (!timesheet) {
-//       return res.sendStatus(404)
-//     } else {
-//       next();
-//     }
-//   });
-// });
+timesheetsRouter.param('id', (req, res, next, id) => {
+  //console.log('doing name validations on ' + id);
+  db.get('Select * from Timesheet where id = $id', {$id: id}, (error, timesheet) => {
+    if (!timesheet) {
+      return res.sendStatus(404)
+    } else {
+      next();
+    }
+  });
+});
+
 
 timesheetsRouter.get('/', (req, res, next) => {
   const timesheet = req.timesheet;

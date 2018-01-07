@@ -7,7 +7,24 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
 
-menusRouter.use('/:id/menu-items', menuItemRouter);
+
+menusRouter.param('menuid', (req, res, next, menuid) => {
+    console.log('checking menu parameters');
+  const sql = 'SELECT * FROM Menu WHERE Menu.id = $menuid';
+  const values = {$menuid: menuid};
+  db.get(sql, values, (error, menu) => {
+    if (error) {
+      next(error);
+    } else if (!menu) {
+      res.sendStatus(404);
+    } else {
+      req.menu = menu;
+      next();
+    }
+  });
+});
+
+menusRouter.use('/:menuid/menu-items', menuItemRouter);
 
 
 menusRouter.get('/', (req, res) => {
@@ -66,7 +83,7 @@ menusRouter.post('/', validateMenu, (req, res, next) => {
 menusRouter.put('/:id', validateMenu, (req, res, next) => {
 
     const menuToUpdate = req.body.menu;
-    console.log(menuToUpdate);
+    //console.log(menuToUpdate);
     //console.log(artistToUpdate);
     //console.log("this is params " + req.params.id);
     db.run(`UPDATE Menu SET title=$title where id=${req.params.id}`,

@@ -90,9 +90,7 @@ timesheetsRouter.put('/:id', validateTimesheet, (req, res, next) => {
     });
 
 timesheetsRouter.delete('/:id', (req, res, next) => {
-  const menuSql = 'SELECT * FROM MenuItem WHERE MenuItem.menu_id = $menuid';
-  const menuValues = {$menuid: req.params.id};
-      db.run('DELETE from Menu where id = $id', {$id: req.params.id}, (error) => {
+      db.run('DELETE from Timesheet where id = $id', {$id: req.params.id}, (error) => {
         if (error) {
           next(error);
         } else {

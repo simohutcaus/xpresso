@@ -8,7 +8,23 @@ employeesRouter.use(bodyParser.json());
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
-employeesRouter.use('/:id/timesheets', timesheetsRouter);
+employeesRouter.param('employeeId', (req, res, next, employeeId) => {
+    console.log('checking emp parameters');
+  const sql = 'SELECT * FROM Employee WHERE Employee.id = $employeeId';
+  const values = {$employeeId: employeeId};
+  db.get(sql, values, (error, employee) => {
+    if (error) {
+      next(error);
+    } else if (!employee) {
+      res.sendStatus(404);
+    } else {
+      req.employee = employee;
+      next();
+    }
+  });
+});
+
+employeesRouter.use('/:employeeId/timesheets', timesheetsRouter);
 
 
 

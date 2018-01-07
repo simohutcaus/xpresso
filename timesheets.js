@@ -5,30 +5,26 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
 
-timesheetsRouter.param('id', (req, res, next, id) => {
-  const timesheetId = Number(id);
-  console.log('doing name validations on ' + id);
-  db.get('Select * from Timesheet where id = $id', {$id: timesheetId}, (error, timesheet) => {
-    if (error) {
-      next(error);
-    } else if (timesheet) {
-      req.timesheet = timesheet;
-      next();
-    } else {
-      res.status(404).send();
-    }
-  });
-});
+// timesheetsRouter.param('id', (req, res, next, id) => {
+//   console.log('doing name validations on ' + id);
+//   db.get('Select * from Employee where id = $id', {$id: id}, (error, timesheet) => {
+//     if (!timesheet) {
+//       return res.sendStatus(404)
+//     } else {
+//       next();
+//     }
+//   });
+// });
 
 timesheetsRouter.get('/', (req, res, next) => {
   const timesheet = req.timesheet;
   db.all(`select * from Timesheet where employee_id = $id`, {$id: req.params.id}, (error, rows) => {
       //console.log('executed sql');
       //console.log(rows);
-    if (error) {
+    if (!rows) {
       console.log('triggered');
         //console.log('this is error ' + error);
-        next(error);
+        res.sendStatus(404);
       //next();
     } else {
       //console.log(rows + ' This is rows');
@@ -45,6 +41,7 @@ const validateTimesheet = (req, res, next) => {
   }
   next();
 }
+
 
 
 
@@ -91,6 +88,20 @@ timesheetsRouter.put('/:id', validateTimesheet, (req, res, next) => {
 
     });
 
+timesheetsRouter.delete('/:id', (req, res, next) => {
+
+    db.run(`DELETE FROM Timesheet WHERE id = ${req.params.id}`), function (error, row) {
+        console.log(row);
+        if (error) {
+            console.log('this is error ' + error);
+            next(error);
+
+        } else {
+          res.sendStatus(204);
+        }
+
+    }
+    });
 
 
 

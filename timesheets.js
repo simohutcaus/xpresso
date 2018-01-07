@@ -18,7 +18,7 @@ const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite'
 
 timesheetsRouter.get('/', (req, res, next) => {
   const timesheet = req.timesheet;
-  db.all(`select * from Timesheet where employee_id = $id`, {$id: req.params.id}, (error, rows) => {
+  db.all(`select * from Timesheet where employee_id = $id`, {$id: req.employee.id}, (error, rows) => {
       //console.log('executed sql');
       //console.log(rows);
     if (!rows) {
@@ -48,7 +48,7 @@ const validateTimesheet = (req, res, next) => {
   timesheetsRouter.post('/', validateTimesheet, (req, res, next) => {    
     //console.log('this is mmenu post body ' + req.body.menu.title);
     db.run(`INSERT INTO Timesheet(hours, rate, date, employee_id) VALUES ($hours, $rate, $date, $employee_id)`, 
-    { $hours: req.body.timesheet.hours, $rate: req.body.timesheet.rate, $date: req.body.timesheet.date, $employee_id:req.params.id}, function (error) {
+    { $hours: req.body.timesheet.hours, $rate: req.body.timesheet.rate, $date: req.body.timesheet.date, $employee_id:req.employee.id}, function (error) {
         if (error) {
             ('error with sql  ' + console.log(error));
             return res.sendStatus(500);

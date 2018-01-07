@@ -10,6 +10,9 @@ const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite'
 
 employeesRouter.use('/:id/timesheets', timesheetsRouter);
 
+
+
+
 employeesRouter.get('/', (req, res) => {
     db.all('select * from Employee where is_current_employee = 1', (err, rows) => {
         if (err) {
@@ -34,18 +37,7 @@ employeesRouter.get('/:id', (req, res, next) => {
     });
 });
 
-employeesRouter.get('/:id/timesheets', (req, res, next) => {
-    db.get(`select * from Timesheet where employee_id = $id`, {$id: req.params.id}, (err, row) => {
-        //console.log(req);
-        if (!row) {
-            console.log(err);
-            console.log(row);
-            res.sendStatus(404);
-        } else {
-            res.send({employee: row});
-        }
-    });
-});
+
 
 const validateEmployee = (req, res, next) => {
   const employeeToCreate = req.body.employee;

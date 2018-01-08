@@ -4,7 +4,8 @@ const menuItemRouter = express.Router({mergeParams: true});
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
-menuItemRouter.param('menuItemId', (req, res, next, id) => {
+menuItemRouter.param('id', (req, res, next, id) => {
+  console.log('checking menuitemid');
   const menuItemId = Number(id);
   db.get('SELECT * FROM MenuItem WHERE id = $id', { $id : menuItemId },
     (error, menuItem) => {
@@ -42,10 +43,19 @@ menuItemRouter.get('/', (req, res, next) => {
 
 const validateMenuItem= (req, res, next) => {
     //console.log('this is menu ' + req.body);
-  if (!req.body.menuItem.name || !req.body.menuItem.inventory || req.body.menuItem.price) {
+  if (!req.body.menuItem.name || !req.body.menuItem.inventory || req.body.menuItem.price || !req.params.id) {
     return res.sendStatus(400);
   }
   next();
+}
+
+const validateMenuItem2= (req, res, next) => {
+  //console.log('this is menu ' + req.body);
+if (!req.body.menuItem.name || !req.body.menuItem.inventory || !req.body.menuItem.price) {
+  console.log('triggered validation');
+  return res.sendStatus(400);
+}
+next();
 }
 
 menuItemRouter.post('/',validateMenuItem,  (req, res, next) => {    
@@ -56,10 +66,10 @@ menuItemRouter.post('/',validateMenuItem,  (req, res, next) => {
             return res.sendStatus(500);
         }   
 
-        db.get(`SELECT * FROM MenuItem WHERE id = ${this.lastID}`, (err, row) => {
-      if (!row) {
+        db.get(`SELECT * FROM MenuItem WHERE MenuItem.id = ${this.lastID}`, (err, row) => {
+      if (error) {
           //console.log(err);
-        return res.sendStatus(500);
+        next(error)
       }
       res.status(201).send({menuItem: row});
     });
@@ -67,28 +77,42 @@ menuItemRouter.post('/',validateMenuItem,  (req, res, next) => {
 
 });
 
-menuItemRouter.put('/:id', validateMenuItem, (req, res, next) => {
-      console.log(req.body.menu);
-      const menuToUpdate = req.body.menu;
-      //console.log(artistToUpdate);
-      //console.log("this is params " + req.params.id);
-      db.run(`UPDATE MenuItem SET name=$name, description=$description, inventory=$inventory, price=$price, menu_id=$menu_id where id=${req.params.id}`,
-      {$name:req.body.menuItem.name, $description: req.body.menuItem.description, $inventory:req.body.menuItem.inventory, $price: req.body.menuItem.price, $menu_id:req.body.menuItem.menu_id}), function (error, row) {
-          console.log(row);
-          if (error) {
-              console.log('this is error ' + error);
-              return res.status(404).send();
-          }
-      }
-          db.get(`SELECT * from MenuItem where id = $id`, {$id: req.body.menuItem.menu_id}, (error, row) => {
-              if(!row) {
-                  return res.sendStatus(500);
-              }
-              //console.log(row);
-              res.status(200).send({menuItem: row});
-          })
-  
+menuItemRouter.put('/:id', (req, res, next) => {
+  console.log(req.body.menuItem);
+  const name = req.body.menuItem.name,
+        description = req.body.menuItem.description,
+        inventory = req.body.menuItem.inventory,
+        price = req.body.menuItem.price;
+
+        if (!name || !description || !inventory || !price) {
+          return res.sendStatus(400);
+  }
+      const sql = 'UPDATE MenuItem SET name = $name, description = $description, ' +
+          'inventory= $inventory, price=$price ' +
+          'WHERE MenuItem.id = $menuItemId';
+      const values = {
+        $name: name,
+        $description: description,
+        $inventory: inventory,
+        $price: price,
+        $menuItemId: req.params.id
+      };
+
+      db.run(sql, values, function(error) {
+        if (error) {
+          next(error);
+        } else {
+          
+          db.get(`SELECT * FROM MenuItem WHERE MenuItem.id = ${req.params.id}`,
+            (error, issue) => {
+              res.status(200).json({issue: issue});
+            });
+        }
       });
+    });
+
+
+
 
 
 menuItemRouter.delete('/:id', (req, res, next) => {

@@ -5,6 +5,8 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
 
+//sets id parameter for timesheets router to be used when validating that timesheet exists before proceeding with other work
+
 timesheetsRouter.param('id', (req, res, next, id) => {
   //console.log('doing name validations on ' + id);
   db.get('Select * from Timesheet where id = $id', {$id: id}, (error, timesheet) => {
@@ -16,6 +18,8 @@ timesheetsRouter.param('id', (req, res, next, id) => {
   });
 });
 
+
+//returns all timesheets linked to a employee via the id provided
 
 timesheetsRouter.get('/', (req, res, next) => {
   const timesheet = req.timesheet;
@@ -34,6 +38,7 @@ timesheetsRouter.get('/', (req, res, next) => {
   });
 });
 
+//ensures enough information is provided to add a timesheet
 
 const validateTimesheet = (req, res, next) => {
     //console.log('this is menu ' + req.body);
@@ -44,7 +49,7 @@ const validateTimesheet = (req, res, next) => {
 }
 
 
-
+//adds a new timesheet
 
   timesheetsRouter.post('/', validateTimesheet, (req, res, next) => {    
     //console.log('this is mmenu post body ' + req.body.menu.title);
@@ -54,7 +59,7 @@ const validateTimesheet = (req, res, next) => {
             ('error with sql  ' + console.log(error));
             return res.sendStatus(500);
         }   
-
+//returns the new timesheet once added
         db.get(`SELECT * FROM Timesheet WHERE id = ${this.lastID}`, (err, row) => {
       if (err) {
           //console.log(err);
@@ -65,6 +70,8 @@ const validateTimesheet = (req, res, next) => {
   });
     })
 })
+
+//updates a existing timesheet
 
 timesheetsRouter.put('/:id', validateTimesheet, (req, res, next) => {
 
@@ -79,6 +86,8 @@ timesheetsRouter.put('/:id', validateTimesheet, (req, res, next) => {
             return res.status(404).send();
         }
     }
+
+    // returns the updated timesheet
         db.get(`SELECT * from Timesheet where id = $id`, {$id: req.params.id}, (error, row) => {
             if(!row) {
                 return res.sendStatus(500);
@@ -88,6 +97,8 @@ timesheetsRouter.put('/:id', validateTimesheet, (req, res, next) => {
         })
 
     });
+
+    //deletes a timesheet and then provides a 204 response
 
 timesheetsRouter.delete('/:id', (req, res, next) => {
       db.run('DELETE from Timesheet where id = $id', {$id: req.params.id}, (error) => {

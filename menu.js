@@ -8,6 +8,8 @@ const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite'
 
 
 
+//sets the menuid parameter for the menuItem router and also ensures the menu id exists in the database
+
 menusRouter.param('menuid', (req, res, next, menuid) => {
     console.log('checking menu parameters');
   const sql = 'SELECT * FROM Menu WHERE Menu.id = $menuid';
@@ -24,8 +26,12 @@ menusRouter.param('menuid', (req, res, next, menuid) => {
   });
 });
 
+//sets the route paramater to be used with the menu-items router and the router
+
 menusRouter.use('/:menuid/menu-items', menuItemRouter);
 
+
+// returns all menus from the database
 
 menusRouter.get('/', (req, res) => {
     db.all('select * from Menu', (err, rows) => {
@@ -37,6 +43,8 @@ menusRouter.get('/', (req, res) => {
         }
     });
 });
+
+// returns a individual menu from the database based on the id provided in the route.
 
 menusRouter.get('/:id', (req, res, next) => {
     db.get(`select * from Menu where id = $id`, {$id: req.params.id}, (err, row) => {
@@ -51,6 +59,7 @@ menusRouter.get('/:id', (req, res, next) => {
     });
 });
 
+//validates that the data required to add or update a menu is included in the payload 
 
 const validateMenu = (req, res, next) => {
     //console.log('this is menu ' + req.body);
@@ -59,6 +68,9 @@ const validateMenu = (req, res, next) => {
   }
   next();
 }
+
+//adds a new menu to the database.
+
 
 menusRouter.post('/', validateMenu, (req, res, next) => {    
     //console.log('this is mmenu post body ' + req.body.menu.title);
@@ -69,6 +81,9 @@ menusRouter.post('/', validateMenu, (req, res, next) => {
             return res.sendStatus(500);
         }   
 
+
+        //after adding the menu to the database returns the new menu
+
         db.get(`SELECT * FROM Menu WHERE id = ${this.lastID}`, (err, row) => {
       if (!row) {
           //console.log(err);
@@ -78,6 +93,8 @@ menusRouter.post('/', validateMenu, (req, res, next) => {
     });
     })
 })
+
+//updates a existing menu in the database
 
 
 menusRouter.put('/:id', validateMenu, (req, res, next) => {
@@ -94,6 +111,8 @@ menusRouter.put('/:id', validateMenu, (req, res, next) => {
             res.sendStatus(500);
         }
 
+        //after the menu is updated, it is returned.
+
     }
         db.get(`SELECT * from Menu where id = $id`, {$id: req.params.id}, (error, row) => {
             if(!row) {
@@ -105,6 +124,8 @@ menusRouter.put('/:id', validateMenu, (req, res, next) => {
 
     });
 
+
+//deletes a menu where no menu items exist against the menu. If menu items exist, a 400 response is returned
 
 menusRouter.delete('/:id', (req, res, next) => {
   const menuSql = 'SELECT * FROM MenuItem WHERE MenuItem.menu_id = $menuid';

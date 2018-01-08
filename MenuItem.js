@@ -4,6 +4,9 @@ const menuItemRouter = express.Router({mergeParams: true});
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
+
+//sets the id parameter for the menuItemRouter and ensures that the menu items exist before proceeding with other tasks
+
 menuItemRouter.param('id', (req, res, next, id) => {
   console.log('checking menuitemid ' + id);
   const menuItemId = Number(id);
@@ -21,6 +24,8 @@ menuItemRouter.param('id', (req, res, next, id) => {
     });
 });
 
+
+//returns all the menu items related to the menu id provided
 
 menuItemRouter.get('/', (req, res, next) => {
     const menu = req.menu;
@@ -41,6 +46,7 @@ menuItemRouter.get('/', (req, res, next) => {
   });
 });
 
+//ensures all data required to add a new menu item is included in the payload
 
 const validateMenuItem= (req, res, next) => {
    req.name = req.body.menuItem.name;
@@ -56,6 +62,8 @@ const validateMenuItem= (req, res, next) => {
   }
 }
 
+//ensures all data required to update a menu item is included in the payload
+
 const validateMenuItem2= (req, res, next) => {
   //console.log('this is menu ' + req.body);
 if (!req.body.menuItem.name || !req.body.menuItem.inventory || !req.body.menuItem.price || !req.params.menuid) {
@@ -64,6 +72,8 @@ if (!req.body.menuItem.name || !req.body.menuItem.inventory || !req.body.menuIte
 }
 next();
 }
+
+//adds a new item to a existing menu 
 
 menuItemRouter.post('/', validateMenuItem, (req, res, next) => {
   console.log(req.body);
@@ -87,6 +97,8 @@ menuItemRouter.post('/', validateMenuItem, (req, res, next) => {
       }
   });
 });
+
+//updates a existing menu item.
 
 menuItemRouter.put('/:id', validateMenuItem2, (req, res, next) => {
   console.log(req.body.menuItem);
@@ -126,7 +138,7 @@ menuItemRouter.put('/:id', validateMenuItem2, (req, res, next) => {
 
 
 
-
+//deletes a existing menu item and provides a 204 response when complete.
 
 menuItemRouter.delete('/:id', (req, res, next) => {
   db.run('DELETE from MenuItem where id = $id', {$id: req.params.id}, (error) => {

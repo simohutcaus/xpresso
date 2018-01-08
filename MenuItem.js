@@ -4,12 +4,26 @@ const menuItemRouter = express.Router({mergeParams: true});
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
-
+menuItemRouter.param('menuItemId', (req, res, next, id) => {
+  const menuItemId = Number(id);
+  db.get('SELECT * FROM MenuItem WHERE id = $id', { $id : menuItemId },
+    (error, menuItem) => {
+      if (error) {
+        next(error);
+      } else if (menuItem) {
+        req.menuItem = menuItem;
+        next();
+      } else {
+        res.status(404).send()
+      }
+    });
+});
 
 
 menuItemRouter.get('/', (req, res, next) => {
+    const menu = req.menu;
     console.log(req.params.id);
-  db.all(`select * from MenuItem where menu_id = $id`, {$id: req.params.id}, (error, rows) => {
+  db.all(`select * from MenuItem where menu_id = $id`, {$id: menu.id}, (error, rows) => {
       //console.log('executed sql');
       //console.log(rows);
     if (!rows) {
@@ -18,7 +32,7 @@ menuItemRouter.get('/', (req, res, next) => {
         res.sendStatus(404);
       //next();
     } else {
-        menuitems = rows;
+       // menuitems = rows;
       //console.log(rows + ' This is rows');
       res.status(200).json({menuItems: rows});
     }
@@ -28,12 +42,11 @@ menuItemRouter.get('/', (req, res, next) => {
 
 const validateMenuItem= (req, res, next) => {
     //console.log('this is menu ' + req.body);
-  if (!req.body.menuItem.name || !req.body.menuItem.description || !req.body.menuItem.inventory || req.body.menuItem.price) {
+  if (!req.body.menuItem.name || !req.body.menuItem.inventory || req.body.menuItem.price) {
     return res.sendStatus(400);
   }
   next();
 }
-
 
 menuItemRouter.post('/',validateMenuItem,  (req, res, next) => {    
     db.run(`INSERT INTO MenuItem(name, description, inventory, price, menu_id) VALUES ($name, $description, $inventory, $price, $menu_id)`, 
@@ -50,11 +63,46 @@ menuItemRouter.post('/',validateMenuItem,  (req, res, next) => {
       }
       res.status(201).send({menuItem: row});
     });
-
-
-
     })
 
-})
+});
+
+menuItemRouter.put('/:id', validateMenuItem, (req, res, next) => {
+      console.log(req.body.menu);
+      const menuToUpdate = req.body.menu;
+      //console.log(artistToUpdate);
+      //console.log("this is params " + req.params.id);
+      db.run(`UPDATE MenuItem SET name=$name, description=$description, inventory=$inventory, price=$price, menu_id=$menu_id where id=${req.params.id}`,
+      {$name:req.body.menuItem.name, $description: req.body.menuItem.description, $inventory:req.body.menuItem.inventory, $price: req.body.menuItem.price, $menu_id:req.body.menuItem.menu_id}), function (error, row) {
+          console.log(row);
+          if (error) {
+              console.log('this is error ' + error);
+              return res.status(404).send();
+          }
+      }
+          db.get(`SELECT * from MenuItem where id = $id`, {$id: req.body.menuItem.menu_id}, (error, row) => {
+              if(!row) {
+                  return res.sendStatus(500);
+              }
+              //console.log(row);
+              res.status(200).send({menuItem: row});
+          })
+  
+      });
+
+
+menuItemRouter.delete('/:id', (req, res, next) => {
+  db.run('DELETE from MenuItem where id = $id', {$id: req.params.id}, (error) => {
+    if (error) {
+      next(error);
+    } else {
+      res.sendStatus(204);
+    }
+  });
+}
+);
+
+
+
 
 module.exports = menuItemRouter;

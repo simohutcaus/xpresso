@@ -108,11 +108,15 @@ menusRouter.put('/:id', validateMenu, (req, res, next) => {
 
 menusRouter.delete('/:id', (req, res, next) => {
   const menuSql = 'SELECT * FROM MenuItem WHERE MenuItem.menu_id = $menuid';
+  console.log(req.params.id + ' this is req id');
   const menuValues = {$menuid: req.params.id};
-  db.get(menuSql, menuValues, (error, issue) => {
+  console.log(menuValues + ' This is menu values'); 
+  db.get(`Select * from MenuItem WHERE MenuItem.menu_id = ${req.params.id}`, (error, menu) => {
     if (error) {
+        console.log(error);
       next(error);
-    } else if (issue) {
+    } else if (menu) {
+        console.log('elseifmenu 400');
       res.sendStatus(400);
     } else {
       const deleteSql = 'DELETE FROM Menu WHERE id = $menuid';

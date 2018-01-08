@@ -104,10 +104,12 @@ employeesRouter.put('/:id', validateEmployee, (req, res, next) => {
     }
         db.get(`SELECT * from Employee where id = $id`, {$id: req.params.id}, (error, row) => {
             if(!row) {
+                next(error);
                 return res.sendStatus(500);
-            }
+            } else {
             //console.log(row);
             res.status(200).send({employee: row});
+            }
         })
 
     });
@@ -121,6 +123,7 @@ employeesRouter.delete('/:id', (req, res, next) => {
     db.run(`UPDATE Employee SET is_current_employee = 0 where id=${req.params.id}`), function (error, row) {
         console.log(row);
         if (error) {
+            next(error);
             console.log('this is error ' + error);
             res.sendStatus(500);
         }
